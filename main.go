@@ -1,19 +1,20 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"stockChina/common"
 	"stockChina/conf"
 	"stockChina/handler"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	log "github.com/sirupsen/logrus"
 )
 
-const(
+const (
 	TensentBaseUrl = "http://data.gtimg.cn/flashdata/hushen/daily/"
-	SinaBaseUrl = "http://hq.sinajs.cn/list="
+	SinaBaseUrl    = "http://hq.sinajs.cn/list="
 )
 
 func setupRouter() *gin.Engine {
@@ -21,12 +22,10 @@ func setupRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(common.Logger(), gin.Recovery())
 
-	resolver := handler.TensentStockURLResolver {
-		ExternalUrl: TensentBaseUrl ,
+	resolver := handler.TensentStockURLResolver{
+		ExternalUrl: TensentBaseUrl,
 	}
-	HTTPClientReverseProxy := handler.NewHTTPClientReverseProxy(100 * time.Second,
-		10,
-		10)
+	HTTPClientReverseProxy := handler.NewHTTPClientReverseProxy(100*time.Second, 10, 10)
 	GetKline := handler.MakeHandlerWrapper(handler.GetKline, resolver, HTTPClientReverseProxy)
 
 	audit := r.Group("/v1")
