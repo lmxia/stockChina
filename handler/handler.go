@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type StockWatchInfo struct {
@@ -24,6 +25,7 @@ type BaseURLResolver interface {
 type TensentStockURLResolver struct {
 	ExternalUrl string
 }
+
 // NewHTTPClientReverseProxy proxies to an upstream host through the use of a http.Client
 func NewHTTPClientReverseProxy(timeout time.Duration, maxIdleConns, maxIdleConnsPerHost int) *HTTPClientReverseProxy {
 	h := HTTPClientReverseProxy{
@@ -56,8 +58,8 @@ func NewHTTPClientReverseProxy(timeout time.Duration, maxIdleConns, maxIdleConns
 // HTTPClientReverseProxy proxy to a remote BaseURL using a http.Client
 type HTTPClientReverseProxy struct {
 	TargetUrl string
-	Client  *http.Client
-	Timeout time.Duration
+	Client    *http.Client
+	Timeout   time.Duration
 }
 
 // Resolve used tensent resolver
@@ -67,7 +69,6 @@ func (resolver TensentStockURLResolver) Resolve(c *gin.Context) string {
 	stockId := c.Query("stockid")
 	return fmt.Sprintf("%s%d/%s%s.js", resolver.ExternalUrl, year, address, stockId)
 }
-
 
 func MakeHandlerWrapper(next gin.HandlerFunc, resovler BaseURLResolver, proxy *HTTPClientReverseProxy) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -83,20 +84,20 @@ func MakeHandlerWrapper(next gin.HandlerFunc, resovler BaseURLResolver, proxy *H
 			if i == 0 {
 				continue
 			}
-			infos :=strings.Split(dayInfo," ")
-			if len(infos)!= 6 {
+			infos := strings.Split(dayInfo, " ")
+			if len(infos) != 6 {
 				break
 			}
-			openPrice, _:= strconv.ParseFloat(infos[1], 64)
-			closePrice, _:= strconv.ParseFloat(infos[2], 64)
-			maxPrice, _:= strconv.ParseFloat(infos[3], 64)
-			minPrice, _:= strconv.ParseFloat(infos[4], 64)
+			openPrice, _ := strconv.ParseFloat(infos[1], 64)
+			closePrice, _ := strconv.ParseFloat(infos[2], 64)
+			maxPrice, _ := strconv.ParseFloat(infos[3], 64)
+			minPrice, _ := strconv.ParseFloat(infos[4], 64)
 			stockPriceHistoryInfo := types.StockPriceHistoryInfo{
-				Date:infos[0],
-				OpeningPriceToday: openPrice,
+				Date:                  infos[0],
+				OpeningPriceToday:     openPrice,
 				ClosingPriceYesterday: closePrice,
-				HighestPriceToday: maxPrice,
-				LowestPriceToday:minPrice,
+				HighestPriceToday:     maxPrice,
+				LowestPriceToday:      minPrice,
 			}
 			stockInfos = append(stockInfos, stockPriceHistoryInfo)
 		}
@@ -112,7 +113,7 @@ func MakeHandlerWrapper(next gin.HandlerFunc, resovler BaseURLResolver, proxy *H
 func forwardRequest(c *gin.Context, proxy *HTTPClientReverseProxy) (*http.Response, error) {
 	proxyClient := proxy.Client
 	upstreamReq, err := http.NewRequest(c.Request.Method, proxy.TargetUrl, nil)
-	if err !=nil {
+	if err != nil {
 		return nil, nil
 	}
 	deleteHeaders(&upstreamReq.Header, &hopHeaders)
